@@ -1,0 +1,37 @@
+{
+  "manifest_version": "0.3",
+  "name": "red-pen-editor",
+  "display_name": "Red Pen Editor",
+  "version": "0.2.0",
+  "description": "Editorial judgment for agents: propose substantive cuts, then apply only exact edits that keep protected facts.",
+  "author": {
+    "name": "Ron Bronson",
+    "url": "https://github.com/quarterback"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/quarterback/red-pen-editor"
+  },
+  "homepage": "https://github.com/quarterback/red-pen-editor",
+  "license": "MIT",
+  "keywords": ["editing", "editorial", "brevity", "writing", "agent-skill"],
+  "server": {
+    "type": "node",
+    "entry_point": "bin/red-pen-editor-mcp.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/bin/red-pen-editor-mcp.mjs"],
+      "env": {}
+    }
+  },
+  "tools": [
+    {"name": "editorial_brief", "description": "Editorial rubric plus possible repeated sentences and paragraphs."},
+    {"name": "editorial_apply", "description": "Apply exact, non-overlapping edits proposed by the host agent, with a guard for protected facts."},
+    {"name": "editorial_review_local", "description": "Propose cuts with a local Ollama model."},
+    {"name": "editorial_edit_local", "description": "Edit with a local Ollama model and return a guarded revision."}
+  ],
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {"node": ">=20.0.0"}
+  }
+}

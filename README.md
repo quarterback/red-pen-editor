@@ -49,7 +49,9 @@ This package has **not been published to npm**. The package name is a working na
 
 ### 3. MCP server: editorial judgment from any connected agent
 
-Start the dependency-free stdio server:
+The server is listed in the official MCP Registry as `io.github.quarterback/red-pen-editor`. Each GitHub release carries a one-file `.mcpb` bundle that Claude Desktop and other MCPB hosts can install directly.
+
+To run it from a local copy instead, start the dependency-free stdio server:
 
 ```sh
 node /absolute/path/to/red-pen-editor/bin/red-pen-editor-mcp.mjs

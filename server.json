@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.quarterback/red-pen-editor",
+  "title": "Red Pen Editor",
+  "description": "Editorial judgment for agents: propose cuts, then apply only exact edits that keep protected facts.",
+  "version": "0.2.0",
+  "repository": {
+    "url": "https://github.com/quarterback/red-pen-editor",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/quarterback/red-pen-editor/releases/download/v0.2.0/red-pen-editor-0.2.0.mcpb",
+      "version": "0.2.0",
+      "fileSha256": "FILLED_BY_RELEASE_WORKFLOW",
+      "transport": {"type": "stdio"}
+    }
+  ]
+}
