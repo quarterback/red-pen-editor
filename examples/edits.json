@@ -1,0 +1,20 @@
+[
+  {
+    "before": "There are several important changes to the permit application process that residents should know about. The city is making changes to the permit application process that will affect how residents apply.\n\n",
+    "after": "",
+    "kind": "throat-clearing",
+    "reason": "The lead adds no fact beyond the process changes detailed below."
+  },
+  {
+    "before": "The new online application requirement means that residents will need to use the online system to apply for permits starting May 1. Residents who prefer paper can still visit the library.\n\n",
+    "after": "",
+    "kind": "redundancy",
+    "reason": "Repeats the online requirement and the paper alternative in the preceding paragraph."
+  },
+  {
+    "before": "\n\nIn conclusion, these are the important changes residents should be aware of when submitting their permit applications.",
+    "after": "",
+    "kind": "redundancy",
+    "reason": "The conclusion adds no information."
+  }
+]
