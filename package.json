@@ -1,6 +1,6 @@
 {
   "name": "red-pen-editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An editorial judgment skill, local-first CLI, and MCP server for removing unearned words while preserving meaning.",
   "type": "module",
   "license": "MIT",

@@ -59,7 +59,10 @@ export async function reviewWithOllama(text, options = {}) {
   for (const e of data.edits) {
     if (!e || typeof e.before !== 'string' || typeof e.after !== 'string') throw new Error('Malformed proposed edit.');
   }
-  const preview = applyEdits(text, data.edits, options);
+  // A local model may not release protected details; allowLoss is for the host
+  // agent or a person, so strip it from model proposals.
+  const proposals = data.edits.map(({ allowLoss, ...e }) => e);
+  const preview = applyEdits(text, proposals, { preserve: options.preserve });
   return { model, assessment: data.assessment || '', protectedMeaning: data.protectedMeaning || [],
     inspection: inspect(text), ...preview };
 }

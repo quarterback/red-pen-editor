@@ -1,7 +1,7 @@
 import { inspect, editorialBrief, applyEdits } from './index.mjs';
 import { reviewWithOllama } from './model.mjs';
 
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 const INFO = {name:'red-pen-editor', version:VERSION};
 const schemaText = { type:'string', minLength: 1 };
 const commonProps = {
@@ -23,7 +23,8 @@ const toolSpecs = [
   {name:'editorial_apply',title:'Apply justified editorial cuts',
     description:'Safely apply EXACT substring replacements or deletions proposed by the host agent; reject ambiguous, overlapping or fact-losing changes. Always show the revised text for human review.',
     inputSchema:{type:'object',properties:{...commonProps,
-      edits:{type:'array', items:{type:'object',properties:{before:{type:'string'},after:{type:'string'},kind:{type:'string'},reason:{type:'string'}},required:['before','after'],additionalProperties:true}}
+      edits:{type:'array', items:{type:'object',properties:{before:{type:'string'},after:{type:'string'},kind:{type:'string'},reason:{type:'string'},
+        allowLoss:{type:'array',items:{type:'string'},description:'Protected numbers, dates, URLs or emails this edit may remove because the cut is justified. Cannot release anything listed in preserve.'}},required:['before','after'],additionalProperties:true}}
     },required:['text','edits'],additionalProperties:false}},
   {name:'editorial_review_local',title:'Review with a local language model',
     description:'Use Ollama on this computer to make a contextual editorial assessment and propose justified cuts. No commercial API or subscription.',inputSchema:modelOpts},
@@ -48,7 +49,7 @@ export async function processMessage(msg) {
   const stamp = modern ? {_meta:{'io.modelcontextprotocol/serverInfo':INFO}} : {};
   const done = result => ({...base,result,...stamp});
   switch (msg.method) {
-    case 'server/discover': return done({supportedVersions:['2026-07-28'],capabilities:{tools:{listChanged:false}}});
+    case 'server/discover': return done({resultType:'complete',supportedVersions:['2026-07-28'],capabilities:{tools:{listChanged:false}}});
     case 'initialize': return done({protocolVersion:'2025-11-25',capabilities:{tools:{listChanged:false}},serverInfo:INFO,
       instructions:'Use editorial_brief first and editorial_apply after your own substantive judgment. The local-model tools are optional.'});
     case 'ping': return done({});

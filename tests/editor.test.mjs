@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { inspect, applyEdits, wordCount, editorialBrief } from '../src/index.mjs';
+import { inspect, applyEdits, wordCount, editorialBrief, countLiteral } from '../src/index.mjs';
 import { reviewWithOllama, reviewPrompt } from '../src/model.mjs';
 import { processMessage } from '../src/protocol.mjs';
 import { createServer } from 'node:http';
@@ -67,6 +67,7 @@ test('review prompt requires a unique exact source span',()=>{
 test('MCP modern and legacy discovery plus tool application',async()=>{
   const discover=await processMessage({jsonrpc:'2.0',id:1,method:'server/discover',params:{}});
   assert.deepEqual(discover.result.supportedVersions,['2026-07-28']);
+  assert.equal(discover.result.resultType,'complete');
   const legacy=await processMessage({jsonrpc:'2.0',id:2,method:'initialize',params:{protocolVersion:'2025-11-25'}});
   assert.equal(legacy.result.protocolVersion,'2025-11-25');
   const listed=await processMessage({jsonrpc:'2.0',id:3,method:'tools/list',params:{_meta:{'io.modelcontextprotocol/protocolVersion':'2026-07-28'}}});
@@ -88,7 +89,7 @@ test('a mocked local Ollama response produces a guarded revision',async()=>{
   server.listen(0,'127.0.0.1');await once(server,'listening');
   try {
     const result=await reviewWithOllama('As a general observation, applications open Monday.',{endpoint:`http://127.0.0.1:${server.address().port}`,model:'test-model'});
-    assert.equal(result.revised,'applications open Monday.');
+    assert.equal(result.revised,'Applications open Monday.');
     assert.equal(result.accepted.length,1);
   } finally {server.close();}
 });
@@ -117,4 +118,98 @@ test('MCP process speaks newline-delimited JSON-RPC on stdio',async()=>{
     assert.equal(response.id,42);
     assert.deepEqual(response.result,{});
   } finally {child.stdin.end();child.kill();}
+});
+
+test('literals count as whole tokens, so 1 is not kept by 10',()=>{
+  assert.equal(countLiteral('Review takes 10 days.','1'),0);
+  assert.equal(countLiteral('Starts May 1.','1'),1);
+  assert.equal(countLiteral('Email a@b.org today.','a@b.org'),1);
+});
+
+test('rejects the edit that removes the last mention of a written date',()=>{
+  const text='Beginning May 1, apply online.\n\nStarting May 1, use the portal.\n\nReview takes 10 days.';
+  const result=applyEdits(text,[
+    {before:'Beginning May 1, apply online.\n\n',after:''},
+    {before:'Starting May 1, use the portal.\n\n',after:''}
+  ]);
+  assert.equal(result.accepted.length,1);
+  assert.equal(result.rejected.length,1);
+  assert.equal(result.rejected[0].index,1);
+  assert.match(result.rejected[0].reason,/May 1/);
+});
+
+test('allowLoss permits a justified cut of a unique detail and records it',()=>{
+  const text='The program began in 2019. Apply online.';
+  const blocked=applyEdits(text,[{before:'The program began in 2019. ',after:''}]);
+  assert.equal(blocked.accepted.length,0);
+  const allowed=applyEdits(text,[{before:'The program began in 2019. ',after:'',allowLoss:['2019']}]);
+  assert.equal(allowed.revised,'Apply online.');
+  assert.deepEqual(allowed.accepted[0].allowedLoss,['2019']);
+});
+
+test('a detail released by one edit does not block later edits',()=>{
+  const text='The program began in 2019. Apply online now. Thanks.';
+  const result=applyEdits(text,[
+    {before:'The program began in 2019. ',after:'',allowLoss:['2019']},
+    {before:' now',after:''}
+  ]);
+  assert.equal(result.accepted.length,2);
+  assert.equal(result.revised,'Apply online. Thanks.');
+});
+
+test('allowLoss cannot release an explicit preserve string',()=>{
+  const text='Fees rose in 2019. Apply online.';
+  const result=applyEdits(text,[{before:'Fees rose in 2019. ',after:'',allowLoss:['2019','Fees rose']}],{preserve:['Fees rose']});
+  assert.equal(result.accepted.length,0);
+  assert.match(result.rejected[0].reason,/Fees rose/);
+});
+
+test('malformed allowLoss is rejected',()=>{
+  const result=applyEdits('Old text. New text.',[{before:'Old text. ',after:'',allowLoss:'all'}]);
+  assert.equal(result.accepted.length,0);
+  assert.match(result.rejected[0].reason,/allowLoss/);
+});
+
+test('an edit rejected by the guard no longer blocks an overlapping edit',()=>{
+  const text='In 2019 we said hello there friend. End.';
+  const result=applyEdits(text,[
+    {before:'In 2019 we said hello there friend. ',after:''},
+    {before:'hello there friend',after:'hi'}
+  ]);
+  assert.equal(result.revised,'In 2019 we said hi. End.');
+  assert.equal(result.accepted.length,1);
+  assert.equal(result.accepted[0].index,1);
+});
+
+test('capitalizes a sentence whose opening was deleted, and only then',()=>{
+  assert.equal(applyEdits('Honestly, it works. Fine.',[{before:'Honestly, ',after:''}]).revised,'It works. Fine.');
+  assert.equal(applyEdits('Done. Basically, it works.',[{before:'Basically, ',after:''}]).revised,'Done. It works.');
+  assert.equal(applyEdits('We met Ana and bob.',[{before:'Ana and ',after:''}]).revised,'We met bob.');
+  assert.equal(applyEdits('See here: https://x.org/a now.',[{before:'See here: ',after:''}]).revised,'https://x.org/a now.');
+  assert.equal(applyEdits('Run this. Next, `npm test` runs.',[{before:'Next, ',after:''}]).revised,'Run this. `npm test` runs.');
+});
+
+test('inspect flags the paraphrased paragraphs in the demo file',async()=>{
+  const text=await fs.readFile(new URL('../examples/bloated.md',import.meta.url),'utf8');
+  const pairs=inspect(text).possibleRepeatedParagraphs.map(p=>[p.first,p.later]);
+  assert.deepEqual(pairs,[[1,5],[2,3]]);
+});
+
+test('inspect does not flag unrelated paragraphs',()=>{
+  const text='Parking permits cost forty dollars each year for residents.\n\nThe library opens at nine and closes at six on weekdays.';
+  assert.equal(inspect(text).possibleRepeatedParagraphs.length,0);
+});
+
+test('a local model cannot release protected details through allowLoss',async()=>{
+  const server=createServer(async(req,res)=>{
+    for await(const _ of req);
+    res.writeHead(200,{'Content-Type':'application/json'});
+    res.end(JSON.stringify({response:JSON.stringify({assessment:'',edits:[{before:'Founded in 2019. ',after:'',kind:'other',reason:'x',priority:'low',allowLoss:['2019']}],protectedMeaning:[]})}));
+  });
+  server.listen(0,'127.0.0.1');await once(server,'listening');
+  try {
+    const result=await reviewWithOllama('Founded in 2019. Apply online.',{endpoint:`http://127.0.0.1:${server.address().port}`,model:'test-model'});
+    assert.equal(result.accepted.length,0);
+    assert.match(result.rejected[0].reason,/2019/);
+  } finally {server.close();}
 });

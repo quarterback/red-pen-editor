@@ -1,6 +1,6 @@
 # Red Pen Editor
 
-**A free, local-first editorial judgment skill, npm CLI, and MCP server.** Version 0.1.0. MIT licensed. No hosted service, paywall, telemetry, or provider API key.
+**A free, local-first editorial judgment skill, npm CLI, and MCP server.** Version 0.2.0. MIT licensed. No hosted service, paywall, telemetry, or provider API key.
 
 The main question is: **What can be deleted without diminishing the piece's useful meaning, accuracy, or voice?**
 
@@ -36,7 +36,7 @@ node bin/red-pen-editor.mjs review examples/bloated.md --model llama3.2
 node bin/red-pen-editor.mjs edit examples/bloated.md --model llama3.2 > revised.md
 ```
 
-Ollama must be running. `inspect` is only a surface-level diagnostic, not a substitute for an editor. `review` returns the model's proposed cuts and accepted/rejected operations; `edit` prints the revised text and does not overwrite input. Keep a human review before publication. You can override the local model with `--model` or `EDITOR_MODEL`.
+Ollama must be running. `inspect` is only a surface-level diagnostic, not a substitute for an editor. It flags near-identical sentences and paragraphs that share most of their content words. `review` returns the model's proposed cuts and accepted/rejected operations; `edit` prints the revised text and does not overwrite input. Keep a human review before publication. You can override the local model with `--model` or `EDITOR_MODEL`.
 
 To install the *local working folder* as an npm executable:
 
@@ -83,8 +83,10 @@ The host agent can make editorial judgments and call `editorial_apply` itself. *
 2. Identify paragraphs or claims with no unique contribution.
 3. Recommend deletion before sentence-level compression.
 4. Require an exact source span for each cut or replacement.
-5. Reject ambiguous spans, overlapping edits, and attempts to delete a protected number, URL, email, or explicit `preserve` string.
-6. Return an edited version and rejected-edit log; review meaning and grammar before publishing.
+5. Reject ambiguous spans, overlapping edits, and edits that would remove the last occurrence of a protected number, written or ISO date, URL, email, or explicit `preserve` string. Literals are matched as whole tokens, so `1` does not count as kept because `10` survives.
+6. Allow a justified cut of a protected detail only when the edit names it in `allowLoss`. The accepted edit records what it released in `allowedLoss`. `allowLoss` cannot release a `preserve` string, and edits proposed by a local model have it stripped.
+7. When a deletion removes the start of a sentence, capitalize the word that now opens it.
+8. Return an edited version and rejected-edit log; review meaning and grammar before publishing.
 
 ### Host-agent example
 
@@ -103,6 +105,22 @@ The host sends this edit proposal to `editorial_apply`:
 ```
 
 The returned text is `The change takes effect May 1.`
+
+### Cutting a paragraph that holds a unique detail
+
+A background paragraph can be worth cutting even though it holds the only mention of a year. Name the detail in `allowLoss`:
+
+```json
+{
+  "before": "The program began in 2019 as a pilot in two neighborhoods. ",
+  "after": "",
+  "kind": "overexplaining",
+  "reason": "Residents need the current rule, not the program's history.",
+  "allowLoss": ["2019"]
+}
+```
+
+Without `allowLoss`, the edit is rejected with the detail it would remove.
 
 ## What the guard can and cannot prove
 
