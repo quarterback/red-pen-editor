@@ -32,7 +32,17 @@ Owner asked to publish the project to an online directory, then confirmed three 
 
 ## Validation
 
-Results of the `v0.2.0` workflow run are recorded in the follow-up section below.
+### First run (2026-11-07 23:21 UTC, started by the owner)
+
+- Version check, `npm test`, MCPB validate and pack, and `mcp-publisher validate` all passed. Bundle SHA-256: `250cb16c7e78c88d14ec11664cba9c28e857dd83d1bf694905b2d3e879be7129`.
+- `npm publish` signed the provenance statement, then failed with `EOTP`: the npm token was not set to bypass two-factor authentication. Nothing reached npm, so the release and registry steps never ran.
+- npm warned that the `bin` paths needed cleaning.
+
+### Fixes after the first run
+
+- `package.json`: added `repository`, `homepage` and `bugs` (npm checks `repository` against the provenance source), cleaned the `bin` paths with `npm pkg fix`.
+- Workflow: the npm step skips a version that is already published, and the release step replaces the bundle on an existing release, so a rerun after a partial failure completes the remaining steps.
+- Owner action: turn on "Bypass two-factor authentication" for the npm token (or make a new token with it on and update the `NPM_TOKEN` secret), then rerun.
 
 ## What was not done
 

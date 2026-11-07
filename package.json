@@ -5,19 +5,41 @@
   "description": "An editorial judgment skill, local-first CLI, and MCP server for removing unearned words while preserving meaning.",
   "type": "module",
   "license": "MIT",
-  "engines": {"node": ">=20"},
-  "bin": {
-    "red-pen-editor": "./bin/red-pen-editor.mjs",
-    "red-pen-editor-mcp": "./bin/red-pen-editor-mcp.mjs"
+  "engines": {
+    "node": ">=20"
   },
+  "bin": {
+    "red-pen-editor": "bin/red-pen-editor.mjs",
+    "red-pen-editor-mcp": "bin/red-pen-editor-mcp.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quarterback/red-pen-editor.git"
+  },
+  "homepage": "https://github.com/quarterback/red-pen-editor#readme",
+  "bugs": "https://github.com/quarterback/red-pen-editor/issues",
   "exports": {
     ".": "./src/index.mjs",
     "./protocol": "./src/protocol.mjs"
   },
-  "files": ["src", "bin", "skills", "README.md", "LICENSE"],
+  "files": [
+    "src",
+    "bin",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "demo": "node bin/red-pen-editor.mjs inspect examples/bloated.md"
   },
-  "keywords": ["agent-skill", "mcp", "editorial", "copyedit", "brevity", "editing", "ollama"]
+  "keywords": [
+    "agent-skill",
+    "mcp",
+    "editorial",
+    "copyedit",
+    "brevity",
+    "editing",
+    "ollama"
+  ]
 }
