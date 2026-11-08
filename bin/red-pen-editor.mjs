@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import { inspect, applyEdits, editorialBrief } from '../src/index.mjs';
 import { reviewWithOllama } from '../src/model.mjs';
 
-const usage = `Red Pen Editor 0.2.0
+const usage = `Red Pen Editor 0.2.1
 Usage: red-pen-editor <inspect|brief|review|edit|apply> [file|-] [options]
 
 inspect  Show possible repetition and basic structure (no model needed)

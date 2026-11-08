@@ -1,6 +1,6 @@
 # Red Pen Editor
 
-**A free, local-first editorial judgment skill, npm CLI, and MCP server.** Version 0.2.0. MIT licensed. No hosted service, paywall, telemetry, or provider API key.
+**A free, local-first editorial judgment skill, npm CLI, and MCP server.** Version 0.2.1. MIT licensed. No hosted service, paywall, telemetry, or provider API key.
 
 The main question is: **What can be deleted without diminishing the piece's useful meaning, accuracy, or voice?**
 
@@ -21,54 +21,46 @@ cp -R skills/red-pen-editor .agents/skills/
 
 ### 2. npm CLI: review or edit a file locally
 
-Requires Node.js 20+. Run from this directory with no `npm install`:
+Requires Node.js 20+. Install from npm:
 
 ```sh
-node bin/red-pen-editor.mjs inspect examples/bloated.md
-node bin/red-pen-editor.mjs brief examples/bloated.md
+npm install -g red-pen-editor
+red-pen-editor inspect draft.md
+red-pen-editor brief draft.md
+```
+
+Or run it once without installing:
+
+```sh
+npx red-pen-editor inspect draft.md
 ```
 
 For **actual contextual editorial review**, use a local Ollama model:
 
 ```sh
 ollama pull llama3.2
-node bin/red-pen-editor.mjs review examples/bloated.md --model llama3.2
-node bin/red-pen-editor.mjs edit examples/bloated.md --model llama3.2 > revised.md
+red-pen-editor review draft.md --model llama3.2
+red-pen-editor edit draft.md --model llama3.2 > revised.md
 ```
 
 Ollama must be running. `inspect` is only a surface-level diagnostic, not a substitute for an editor. It flags near-identical sentences and paragraphs that share most of their content words. `review` returns the model's proposed cuts and accepted/rejected operations; `edit` prints the revised text and does not overwrite input. Keep a human review before publication. You can override the local model with `--model` or `EDITOR_MODEL`.
 
-To install the *local working folder* as an npm executable:
-
-```sh
-npm link
-red-pen-editor inspect examples/bloated.md
-```
-
-This package has **not been published to npm**. The package name is a working name and availability has not been checked.
-
 ### 3. MCP server: editorial judgment from any connected agent
 
-The server is listed in the official MCP Registry as `io.github.quarterback/red-pen-editor`. Each GitHub release carries a one-file `.mcpb` bundle that Claude Desktop and other MCPB hosts can install directly.
-
-To run it from a local copy instead, start the dependency-free stdio server:
-
-```sh
-node /absolute/path/to/red-pen-editor/bin/red-pen-editor-mcp.mjs
-```
-
-Example client config (adapt the fields to your MCP host):
+Add the dependency-free stdio server to your MCP host. Example client config (adapt the fields to your host):
 
 ```json
 {
   "mcpServers": {
     "red-pen-editor": {
-      "command": "node",
-      "args": ["/absolute/path/to/red-pen-editor/bin/red-pen-editor-mcp.mjs"]
+      "command": "npx",
+      "args": ["-y", "-p", "red-pen-editor", "red-pen-editor-mcp"]
     }
   }
 }
 ```
+
+If you installed the package globally, use `"command": "red-pen-editor-mcp"` with no args.
 
 | Tool | Function | Model requirement |
 | --- | --- | --- |
@@ -134,6 +126,8 @@ The skill and host-agent MCP tools do not contact a third-party service. The Oll
 
 ## Development
 
+From a clone of this repo, with no `npm install`:
+
 ```sh
 npm test
 npm run demo
@@ -147,6 +141,6 @@ Tests include semantic-risk guardrails, span validation, deterministic review fi
 - Add a human-reviewed benchmark of paragraph-level substantive cuts.
 - Evaluate usefulness and meaning retention, not just words removed.
 - Add a document-aware span format for prose, Markdown, and citations.
-- Test with multiple agents and local models; publish registry packages once the behavior is validated.
+- Test with multiple agents and local models.
 
 MIT License.

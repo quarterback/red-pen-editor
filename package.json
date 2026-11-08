@@ -1,6 +1,6 @@
 {
   "name": "red-pen-editor",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "mcpName": "io.github.quarterback/red-pen-editor",
   "description": "An editorial judgment skill, local-first CLI, and MCP server for removing unearned words while preserving meaning.",
   "type": "module",

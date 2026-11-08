@@ -1,7 +1,7 @@
 import { inspect, editorialBrief, applyEdits } from './index.mjs';
 import { reviewWithOllama } from './model.mjs';
 
-const VERSION = '0.2.0';
+const VERSION = '0.2.1';
 const INFO = {name:'red-pen-editor', version:VERSION};
 const schemaText = { type:'string', minLength: 1 };
 const commonProps = {

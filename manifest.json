@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "red-pen-editor",
   "display_name": "Red Pen Editor",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Editorial judgment for agents: propose substantive cuts, then apply only exact edits that keep protected facts.",
   "author": {
     "name": "Ron Bronson",
